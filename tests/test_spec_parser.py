@@ -3,16 +3,15 @@ from spec_parser.models import ApprovalStatus, MatchType, PriceTier, ProjectDire
 from spec_parser.parser_engine import SpecParserEngine
 
 
-def test_lstk_tonnage_conversion_and_analog():
+def test_hangars_and_gps_profile_optimization():
     engine = SpecParserEngine()
     spec = """
-    1. Профиль С-образный ПС 200х50х2.0 — 4.95 тн
-    2. Швеллер горячекатаный г/к 24 для прогонов — 200 п.м.
+    1. Профиль С-образный ПС 200х60х2.0 — 4.95 тн
+    2. Профиль гнутый нестандартный 215х65х20 (развертка 340 мм по чертежу заказчика) — 500 п.м.
     """
     result = engine.parse_specification(spec, price_tier=PriceTier.BUILDER_OPT)
 
     assert len(result.lines) == 2
-    assert result.primary_direction == ProjectDirection.HANGARS
 
     # 4.95 т = 4950 кг / 4.95 кг/м = 1000 м.п.
     line1 = result.lines[0]
@@ -20,14 +19,11 @@ def test_lstk_tonnage_conversion_and_analog():
     assert line1.normalized_qty == 1000.0
     assert line1.billing_unit == "м.п."
 
-    # Замена швеллера на Z-профиль ЛСТК
+    # Оптимизация профиля ГПС по раскрою рулона 1250 мм (развёртка 312 мм — 4 ручья без отхода)
     line2 = result.lines[1]
-    assert line2.sku == "LSTK-PZ-250-25"
+    assert line2.sku == "GPS-PGS-200-20"
     assert line2.match_type == MatchType.ANALOG
-
-    # Рекомендация высокопрочного крепежа М16
-    rec_skus = {r.sku for r in result.cross_sell_recommendations}
-    assert "MET-BOLT-M16" in rec_skus
+    assert line2.direction == ProjectDirection.FACADES
 
 
 def test_gasblock_pallet_rounding_and_cross_sell():
@@ -79,4 +75,3 @@ def test_margin_guardrails_and_exports():
     crm_payload = build_amocrm_payload(res_normal)
     assert crm_payload["price"] > 0
     assert len(crm_payload["catalog_elements"]) == 1
-

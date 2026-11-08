@@ -158,15 +158,31 @@ class SpecParserEngine:
     ) -> Tuple[Optional[CatalogProduct], MatchType, float]:
         low = text_line.lower()
 
-        # Специальные правила распознавания аналогов (пересогласование проектных решений)
-        if "швеллер" in low or "горячекатан" in low or "г/к 24" in low:
-            return CATALOG_BY_SKU["LSTK-PZ-250-25"], MatchType.ANALOG, 0.91
+        # Специальные правила пересогласования (Value Engineering по 3 проектам холдинга):
+        # 1. Проект «Кровли и фасадные системы» -> Группа продуктов «Профили ГПС» (ПП, ПГС, ПЗ):
+        # Оптимизация нестандартного профиля с большим отходом раскроя рулона 1250 мм на безотходный профиль ГПС
+        if (
+            "нестандарт" in low
+            or "развертк" in low
+            or "340" in low
+            or "215х65" in low
+            or "по чертежу" in low
+        ):
+            return CATALOG_BY_SKU["GPS-PGS-200-20"], MatchType.ANALOG, 0.94
 
-        if ("d300" in low or "д300" in low or "пеноблок" in low or "твинблок" in low):
-            return CATALOG_BY_SKU["GB-D400-375"], MatchType.ANALOG, 0.89
+        # 2. Проект «Ангары и быстровозводимые здания»:
+        # Оптимизация нестандартного габарита здания (19x43) на серийный заводской модуль 18x42
+        if "19х43" in low or "19*43" in low or "индивидуальн" in low:
+            return CATALOG_BY_SKU["ANG-MOD-18x42"], MatchType.ANALOG, 0.92
 
-        if "алюкобонд" in low or "акп" in low or "композитн" in low:
-            return CATALOG_BY_SKU["FAS-KF1-12"], MatchType.ANALOG, 0.88
+        # Оптимизация профиля из обычной стали С245 (t=2.5 мм) на высокопрочную сталь S350GD (t=2.0 мм)
+        if "с245" in low or "c245" in low or "2.5мм" in low or "2,5мм" in low:
+            return CATALOG_BY_SKU["LSTK-PS-200-20"], MatchType.ANALOG, 0.91
+
+        # 3. Проект «Автоклавный газобетон»:
+        # Оптимизация тяжёлого блока D600 на энергоэффективный D400 B2.5 (400 мм) без доп. утепления
+        if "d600" in low or "д600" in low or "пеноблок" in low or "твинблок" in low:
+            return CATALOG_BY_SKU["GB-D400-400"], MatchType.ANALOG, 0.90
 
         # Поиск по ключевым словам каталога
         best_product: Optional[CatalogProduct] = None
@@ -268,7 +284,7 @@ class SpecParserEngine:
         gasblock_m3 = sum(
             line.normalized_qty
             for line in lines
-            if line.sku in ("GB-D500-400", "GB-D400-375", "GB-D500-150")
+            if line.sku in ("GB-D500-400", "GB-D400-400", "GB-D500-150")
         )
         if gasblock_m3 > 0:
             if "GB-GLUE-25" not in present_skus:
@@ -348,7 +364,7 @@ class SpecParserEngine:
         lstk_meters = sum(
             line.normalized_qty
             for line in lines
-            if line.sku in ("LSTK-PS-200-20", "LSTK-PZ-250-25")
+            if line.sku in ("LSTK-PS-200-20", "ANG-MOD-18x42")
         )
         if lstk_meters > 0 and "MET-BOLT-M16" not in present_skus:
             bolt_prod = CATALOG_BY_SKU["MET-BOLT-M16"]
