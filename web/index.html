@@ -112,6 +112,26 @@
       border-color: var(--primary);
       color: #38bdf8;
     }
+    .btn-guide {
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      color: #ffffff !important;
+      border: 1px solid #38bdf8 !important;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      box-shadow: 0 2px 8px rgba(14, 165, 233, 0.25);
+    }
+    .btn-guide:hover {
+      background: linear-gradient(135deg, #0369a1, #0284c7);
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.4);
+      transform: translateY(-1px);
+    }
 
     /* Preset Selector Bar */
     .preset-bar {
@@ -563,6 +583,7 @@
       </p>
     </div>
     <div class="nav-links">
+      <a class="btn-guide" href="guide.html">📖 Инструкция к сервису</a>
       <a class="btn-outline" href="https://kilevoy.github.io/gps/" target="_blank" style="border-color:#10b981;color:#34d399;">📐 Калькулятор ГПС (Раскрой рулона)</a>
       <button class="btn-outline" onclick="download1CCsv()">📥 Скачать CSV (1С / Excel)</button>
       <button class="btn-outline" onclick="switchTab('print'); window.print();">🖨 Печать КП (PDF)</button>

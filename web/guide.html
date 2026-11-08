@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Инструкция: AI-Парсер ТЗ и Авто-Генератор КП (b2b-spec-parser)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card-bg: #111827;
+      --card-border: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #0ea5e9;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --purple: #8b5cf6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Bar */
+    .top-nav {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .brand-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-main);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .nav-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #0284c7;
+      color: #fff;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    .btn-back:hover { background: #0369a1; }
+    .btn-portfolio {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+    .btn-portfolio:hover { color: #fff; }
+
+    /* Layout */
+    .content-wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 36px 20px 60px;
+      flex: 1;
+      width: 100%;
+    }
+
+    /* Hero header */
+    .hero {
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 26px;
+      margin-bottom: 32px;
+    }
+    .tag {
+      display: inline-block;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(14, 165, 233, 0.12);
+      color: #38bdf8;
+      border: 1px solid rgba(14, 165, 233, 0.3);
+      margin-bottom: 12px;
+    }
+    .hero h1 {
+      font-size: 30px;
+      font-weight: 800;
+      line-height: 1.25;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .hero p {
+      font-size: 16px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Section Cards */
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 26px;
+    }
+    .section-card h2 {
+      font-size: 20px;
+      color: #38bdf8;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-card p, .section-card li {
+      font-size: 15px;
+      color: #cbd5e1;
+      line-height: 1.65;
+    }
+    .section-card ul {
+      margin: 12px 0;
+      padding-left: 22px;
+    }
+    .section-card li { margin-bottom: 8px; }
+
+    /* Comparison Box */
+    .vs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 18px 0;
+    }
+    @media (max-width: 720px) {
+      .vs-grid { grid-template-columns: 1fr; }
+    }
+    .vs-box {
+      border-radius: 10px;
+      padding: 16px 18px;
+      font-size: 14px;
+    }
+    .vs-bad {
+      background: rgba(239, 68, 68, 0.07);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+    .vs-bad strong { color: #f87171; display: block; margin-bottom: 6px; font-size: 15px; }
+    .vs-good {
+      background: rgba(16, 185, 129, 0.07);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .vs-good strong { color: #34d399; display: block; margin-bottom: 6px; font-size: 15px; }
+
+    /* Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+    @media (max-width: 720px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+    .feature-item {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 18px;
+    }
+    .feature-item .feature-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fde68a;
+      margin-bottom: 8px;
+    }
+    .feature-item p {
+      font-size: 13.5px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    /* Pipeline Diagram */
+    .flow-diagram {
+      background: #090e17;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 18px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      color: #cbd5e1;
+      overflow-x: auto;
+    }
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .flow-step:last-child { margin-bottom: 0; }
+    .flow-badge {
+      background: #1e293b;
+      color: #38bdf8;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      min-width: 140px;
+      text-align: center;
+    }
+    .flow-arrow { color: #f59e0b; font-weight: bold; }
+
+    /* Steps box */
+    .step-list {
+      counter-reset: guide-step;
+      list-style: none;
+      padding: 0;
+      margin: 16px 0;
+    }
+    .step-list li {
+      counter-increment: guide-step;
+      position: relative;
+      padding-left: 42px;
+      margin-bottom: 16px;
+    }
+    .step-list li::before {
+      content: counter(guide-step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      background: #0284c7;
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bottom-cta {
+      text-align: center;
+      margin-top: 36px;
+      padding: 24px;
+      background: #111827;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+    }
+    .bottom-cta p {
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <nav class="top-nav">
+    <a href="index.html" class="brand-link">
+      <div class="brand-icon">📐</div>
+      <span>AI-Парсер ТЗ и Генератор КП</span>
+    </a>
+    <div class="nav-actions">
+      <a href="https://kilevoy.github.io/" class="btn-portfolio">← Портфолио</a>
+      <a href="index.html" class="btn-back">← К интерактивному стенду</a>
+    </div>
+  </nav>
+
+  <!-- Content Container -->
+  <main class="content-wrap">
+
+    <header class="hero">
+      <span class="tag">Регламент и алгоритмы расчета</span>
+      <h1>Для чего нужен AI-Парсер ТЗ и как он работает физически</h1>
+      <p>
+        Практическое руководство для коммерческого директора, начальника ПТО и руководителей дивизионов: как сократить цикл подготовки сложного КП с 3 дней до 1.5 минут и защитить маржинальность сделок.
+      </p>
+    </header>
+
+    <!-- SECTION 1 -->
+    <section class="section-card">
+      <h2>1. Какую бизнес-проблему решает сервис?</h2>
+      <p>
+        В строительной и производственной отрасли подготовка коммерческого предложения — самое узкое горлышко. Заказчики и генподрядчики присылают заявки в разнородном виде: таблицы Excel с «кривыми» наименованиями, сканы проектной документации, ведомости объемов работ (ВОР), где указаны только тонны или квадратные метры без артикулов.
+      </p>
+
+      <div class="vs-grid">
+        <div class="vs-bad">
+          <strong>❌ Как происходит без AI-парсера (3–4 дня):</strong>
+          Менеджер передает спецификацию в проектно-технический отдел (ПТО). Инженер вручную переводит тонны металлопроката в погонные метры, высчитывает обрезь, подбирает по справочникам крепеж и уплотнители, считает количество фур. Из-за загрузки ПТО ответ клиенту готовится до 4 дней — за это время заказчик часто успевает подписать договор с более быстрым конкурентом.
+        </div>
+        <div class="vs-good">
+          <strong>✅ Как работает с AI-парсером (1.5 минуты):</strong>
+          Менеджер вставляет спецификацию в систему. За 1.5 секунды нейросеть нормализует номенклатуру под заводской каталог 1С, рассчитывает геометрию раскроя рулона с минимальным отходом (0.16%), автоматически добирает всю сопутствующую комплектацию и выдает готовый расчет с логистикой и файлом для 1С.
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2 -->
+    <section class="section-card">
+      <h2>2. Как система устроена физически на практике?</h2>
+      <p>
+        Сервис связывает воедино несколько этапов коммерческой и инженерной работы:
+      </p>
+
+      <div class="features-grid">
+        <div class="feature-item">
+          <div class="feature-head">🔍 1. Нормализация и сопоставление номенклатуры</div>
+          <p>
+            Превращает клиентские формулировки вроде <em>«прогон Z-образный 200х50х2.0 оцинк»</em> или <em>«блок газобетонный 300 D500 B2.5»</em> в точные складские артикулы 1С со стандартными единицами измерения (метры погонные, штуки, поддоны).
+          </p>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-head">📐 2. Оптимизация раскроя рулона (Value Engineering)</div>
+          <p>
+            Для фасадных и кровельных систем рассчитывает раскрой стандартного стального рулона 1250 мм по запатентованным профилям ГПС (ПП, ПГС, ПЗ). Снижает технологический отход сырья <strong>с 18.4% до 0.16%</strong>, экономя предприятию сотни тысяч рублей на каждом заказе.
+          </p>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-head">➕ 3. Автоподбор сопутствующих товаров (Cross-Sell)</div>
+          <p>
+            Ни один менеджер не забудет допродать расходники: система автоматически добавляет саморезы с ЭПДМ-шайбой, полиуретановый герметик, уплотнительные ленты и клей-пену для газобетона по нормам расхода на 1 м² или 1 м³.
+          </p>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-head">🚛 4. Логистический калькулятор и грузоподъемность</div>
+          <p>
+            Складывает общий физический вес и объем партии, проверяет ограничения по осям и рассчитывает точное количество 20-тонных фур (длинномеров) для доставки на объект с расчетом транспортных расходов.
+          </p>
+        </div>
+      </div>
+
+      <div class="flow-diagram">
+        <div class="flow-step">
+          <span class="flow-badge">ТЗ от заказчика</span>
+          <span class="flow-arrow">──► AI-Парсер ──►</span>
+          <span class="flow-badge" style="background:#0284c7;color:#fff;">Каталог 1С + Раскрой</span>
+          <span class="flow-arrow">──► Выгрузка ──►</span>
+          <span class="flow-badge" style="background:#10b981;color:#fff;">PDF А4 + CSV в 1С + amoCRM</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3 -->
+    <section class="section-card">
+      <h2>3. Физические форматы передачи данных</h2>
+      <p>Сервис не оставляет расчет «в воздухе», а сразу генерирует рабочие артефакты:</p>
+      <ul>
+        <li><strong>Печатная форма КП (PDF А4):</strong> готовый коммерческий документ с логотипом, техническими характеристиками, условиями поставки, гарантией завода и факсимиле подписи руководителя.</li>
+        <li><strong>Файл выгрузки CSV (для 1С:Предприятие):</strong> бухгалтер или менеджер импортирует файл прямо в документ «Заказ покупателя» в 1С без ручного ввода номенклатуры и цен.</li>
+        <li><strong>Синхронизация с amoCRM / Битрикс24:</strong> итоговая сумма сделки, маржинальность, вес партии и прикрепленный PDF автоматически обновляют карточку сделки.</li>
+      </ul>
+    </section>
+
+    <!-- SECTION 4 -->
+    <section class="section-card">
+      <h2>4. Как протестировать стенд прямо сейчас?</h2>
+      <ol class="step-list">
+        <li>
+          <strong>Выберите один из 3 типовых сценариев:</strong>
+          <ul>
+            <li><em>«1. Проект Ангары/ЛСТК»:</em> оптимизация нестандартного здания (19×43 м → типовой модуль 18×42 м), экономия металла.</li>
+            <li><em>«2. Проект Фасады и Кровли»:</em> расчет профилей ГПС с раскроем рулона 1250 мм и допродажей доборных элементов.</li>
+            <li><em>«3. Проект Автоклавный газобетон»:</em> расчет стеновых блоков D500, пересчет в поддоны и автоподбор фирменного клея.</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Изучите таблицу расчета:</strong> обратите внимание на себестоимость, розничную цену, рассчитанную маржу и блок логистики (количество 20-тонных фур).
+        </li>
+        <li>
+          <strong>Проверьте экспортные кнопки:</strong>
+          нажмите <em>«📥 Скачать CSV (1С / Excel)»</em> или <em>«🖨 Печать КП (PDF)»</em>, чтобы оценить чистоту готовых документов.
+        </li>
+        <li>
+          <strong>Проверьте в свободной вставке:</strong> вставьте в левое окно текст своего технического задания и нажмите <em>«Рассчитать КП за 1.5 сек»</em>.
+        </li>
+      </ol>
+    </section>
+
+    <div class="bottom-cta">
+      <p>Готовы протестировать расчет спецификации на живых данных?</p>
+      <a href="index.html" class="btn-back" style="font-size:15px;padding:10px 22px;">⚡ Перейти к демо-стенду парсера ТЗ</a>
+    </div>
+
+  </main>
+
+</body>
+</html>
