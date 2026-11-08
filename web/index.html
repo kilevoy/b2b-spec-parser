@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-Парсер ТЗ и Авто-Генератор КП (B2B Spec Parser) — Демо-стенд</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --surface: #111827;
+      --surface-2: #1e293b;
+      --surface-3: #334155;
+      --border: #2dd4bf33;
+      --line: #1f2937;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #0ea5e9;
+      --primary-hover: #0284c7;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --purple: #8b5cf6;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Demo Disclaimer Banner */
+    .demo-banner {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: #fde68a;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .demo-banner a {
+      color: #38bdf8;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    /* Header */
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--surface-2);
+      padding-bottom: 16px;
+    }
+    .title-group h1 {
+      margin: 0 0 6px;
+      font-size: 26px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge-pill {
+      font-size: 12px;
+      background: rgba(14, 165, 233, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(14, 165, 233, 0.35);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 820px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-outline {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--surface-3);
+      background: var(--surface);
+      color: var(--text);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: 0.15s;
+      cursor: pointer;
+    }
+    .btn-outline:hover {
+      border-color: var(--primary);
+      color: #38bdf8;
+    }
+
+    /* Preset Selector Bar */
+    .preset-bar {
+      background: var(--surface);
+      border: 1px solid var(--surface-2);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+    .preset-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .preset-buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 10px;
+    }
+    .preset-btn {
+      background: var(--surface-2);
+      border: 1px solid #334155;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 12px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .preset-btn:hover, .preset-btn.active {
+      border-color: var(--primary);
+      background: rgba(14, 165, 233, 0.12);
+    }
+    .preset-btn strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 3px;
+    }
+    .preset-btn span {
+      font-size: 12px;
+      color: var(--muted);
+      display: block;
+    }
+
+    /* Main Grid */
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 1080px) {
+      .workspace-grid { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--surface-2);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .panel-title {
+      margin: 0 0 12px;
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    textarea.spec-input {
+      width: 100%;
+      height: 250px;
+      background: #090d16;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.45;
+      resize: vertical;
+    }
+    textarea.spec-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .control-block {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--surface-2);
+    }
+    .control-block label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #cbd5e1;
+    }
+    .tier-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .tier-btn {
+      padding: 8px 6px;
+      background: var(--surface-2);
+      border: 1px solid #334155;
+      color: var(--muted);
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+    .tier-btn.active {
+      background: rgba(14, 165, 233, 0.2);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .slider-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--primary);
+    }
+    .discount-badge {
+      background: var(--surface-2);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 14px;
+      min-width: 58px;
+      text-align: center;
+      color: #38bdf8;
+    }
+
+    .btn-primary-full {
+      margin-top: 16px;
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3);
+    }
+    .btn-primary-full:hover {
+      opacity: 0.95;
+    }
+
+    /* Margin Guard Box */
+    .margin-guard {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      border: 1px solid;
+    }
+    .margin-guard.auto {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #a7f3d0;
+    }
+    .margin-guard.rop {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fde68a;
+    }
+    .margin-guard.director {
+      background: rgba(244, 63, 94, 0.12);
+      border-color: rgba(244, 63, 94, 0.4);
+      color: #fecdd3;
+    }
+
+    /* KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 800px) {
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-2);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .kpi-card .k-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .kpi-card .k-val {
+      font-size: 22px;
+      font-weight: 800;
+    }
+    .kpi-card .k-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Spec Table */
+    .table-wrap {
+      overflow-x: auto;
+    }
+    table.spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    table.spec-table th {
+      text-align: left;
+      padding: 10px;
+      background: var(--surface-2);
+      color: #cbd5e1;
+      font-weight: 600;
+      border-bottom: 1px solid #334155;
+    }
+    table.spec-table td {
+      padding: 10px;
+      border-bottom: 1px solid #1e293b;
+      vertical-align: top;
+    }
+    .raw-quote {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: monospace;
+      margin-top: 3px;
+    }
+    .eng-note {
+      display: inline-block;
+      margin-top: 5px;
+      font-size: 11.5px;
+      padding: 3px 8px;
+      border-radius: 5px;
+      background: rgba(14, 165, 233, 0.12);
+      color: #7dd3fc;
+      border: 1px solid rgba(14, 165, 233, 0.25);
+    }
+    .match-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .match-exact {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+    }
+    .match-analog {
+      background: rgba(245, 158, 11, 0.18);
+      color: #fbbf24;
+    }
+
+    /* Cross-sell Section */
+    .cross-sell-box {
+      margin-top: 18px;
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .cross-sell-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .cross-sell-header h3 {
+      margin: 0;
+      font-size: 15px;
+      color: #ddd6fe;
+    }
+    .cs-list {
+      display: grid;
+      gap: 10px;
+    }
+    .cs-item {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .cs-info strong {
+      font-size: 13.5px;
+      color: #f1f5f9;
+      display: block;
+    }
+    .cs-info span {
+      font-size: 12px;
+      color: #a78bfa;
+    }
+    .btn-add-cs {
+      background: #7c3aed;
+      color: #fff;
+      border: none;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-add-cs:hover {
+      background: #6d28d9;
+    }
+
+    /* Logistics Bar */
+    .logistics-bar {
+      margin-top: 18px;
+      background: var(--surface-2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .truck-icons {
+      font-size: 22px;
+      letter-spacing: 4px;
+    }
+
+    /* Tabs for Printable KP & CRM JSON */
+    .tabs-bar {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+      border-bottom: 1px solid var(--surface-2);
+      padding-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: var(--surface-2);
+      border: 1px solid transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: rgba(14, 165, 233, 0.15);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    /* Printable A4 Sheet */
+    .a4-preview {
+      margin-top: 16px;
+      background: #ffffff;
+      color: #0f172a;
+      border-radius: 8px;
+      padding: 28px;
+      font-size: 13px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    }
+    .a4-header {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+    .a4-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 12px;
+    }
+    .a4-table th, .a4-table td {
+      border: 1px solid #cbd5e1;
+      padding: 7px 8px;
+      text-align: left;
+    }
+    .a4-table th {
+      background: #f1f5f9;
+    }
+
+    pre.json-box {
+      background: #090d16;
+      color: #34d399;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 12.5px;
+      border: 1px solid #1e293b;
+    }
+
+    @media print {
+      body { background: #fff; color: #000; }
+      .demo-banner, .top-header, .preset-bar, .left-col, .kpi-grid, .cross-sell-box, .logistics-bar, .tabs-bar, .no-print {
+        display: none !important;
+      }
+      .workspace-grid { display: block; }
+      .panel { border: none; padding: 0; background: #fff; }
+      .a4-preview { box-shadow: none; padding: 0; display: block !important; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- Demo Disclaimer -->
+  <div class="demo-banner">
+    <div>
+      ⚠️ <strong>Демонстрационный стенд (Смоделированные демо-данные):</strong> Все цены, себестоимость, артикулы 1С и наименования контрагентов являются учебными для демонстрации работы алгоритмов парсинга ТЗ, подбора аналогов и контроля маржинальности.
+    </div>
+    <div>
+      <a href="https://kilevoy.github.io/">← На главную портфолио</a>
+    </div>
+  </div>
+
+  <!-- Top Header -->
+  <header class="top-header">
+    <div class="title-group">
+      <h1>
+        📐 AI-Парсер ТЗ и Авто-Генератор КП
+        <span class="badge-pill">B2B Spec Parser v1.0</span>
+      </h1>
+      <p class="subtitle">
+        Автоматическая расшифровка строительных спецификаций, ведомостей объёмов работ (ВОР) и заявок снабжения по 3 направлениям холдинга (<strong>Ангары/ЛСТК</strong>, <strong>Фасады</strong>, <strong>Газобетон</strong>). Пересчёт единиц (тн → м.п., м³ → поддоны), подбор заводских аналогов, авто-допродажа комплектующих и контроль маржи за <strong>1.5 секунды</strong> вместо 3 дней в ПТО.
+      </p>
+    </div>
+    <div class="nav-links">
+      <button class="btn-outline" onclick="download1CCsv()">📥 Скачать CSV (1С / Excel)</button>
+      <button class="btn-outline" onclick="switchTab('print'); window.print();">🖨 Печать КП (PDF)</button>
+      <a class="btn-outline" href="https://github.com/kilevoy/b2b-spec-parser" target="_blank">💻 Код на GitHub</a>
+    </div>
+  </header>
+
+  <!-- Presets Bar -->
+  <section class="preset-bar">
+    <span class="preset-label">Выберите типовой сценарий входящего ТЗ (или вставьте свою заявку ниже):</span>
+    <div class="preset-buttons">
+      <button class="preset-btn active" id="preset-hangars" onclick="loadPreset('hangars')">
+        <strong>🏭 1. Проект «Ангары и ЛСТК» (Раздел КМ)</strong>
+        <span>Пересчёт С-профилей из тонн в п.м., замена г/к швеллера №24 на Z-прогон ЛСТК, сэндвич-панели</span>
+      </button>
+      <button class="preset-btn" id="preset-facades" onclick="loadPreset('facades')">
+        <strong>🏢 2. Проект «Кровли и Фасады» (Ведомость ВОР)</strong>
+        <span>Кассеты КФ-1/КФ-2, замена композита АКП на стальную кассету НГ, авто-расчёт кронштейнов и ПШ-50</span>
+      </button>
+      <button class="preset-btn" id="preset-gasblock" onclick="loadPreset('gasblock')">
+        <strong>🧱 3. Проект «Автоклавный газобетон»</strong>
+        <span>Кратность отгрузки поддонам (1.875 м³), замена пеноблока на D400 B2.5, перемычки ПГБ, клей и сетка</span>
+      </button>
+      <button class="preset-btn" id="preset-mixed" onclick="loadPreset('mixed')">
+        <strong>📦 4. Хаотичное письмо снабженца (Комплекс)</strong>
+        <span>Неструктурированная заявка из почты с сокращениями и забытым крепежом по всем 3 направлениям</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Main Workspace -->
+  <div class="workspace-grid">
+    <!-- Left Column: Input & Commercial Controls -->
+    <div class="panel left-col">
+      <div class="panel-title">
+        <span>📥 Текст заявки / Выгрузка из ТЗ или ВОР</span>
+        <span style="font-size:12px;color:var(--muted);">Редактируемое поле</span>
+      </div>
+      <textarea id="specInput" class="spec-input" spellcheck="false"></textarea>
+
+      <div class="control-block">
+        <label>Ценовая колонка контрагента (Право ценообразования):</label>
+        <div class="tier-group">
+          <button class="tier-btn" id="tier-retail" onclick="setTier('retail')">Розница<br><small>Базовый прайс</small></button>
+          <button class="tier-btn active" id="tier-builder_opt" onclick="setTier('builder_opt')">Строитель Опт<br><small>Колонка -6%</small></button>
+          <button class="tier-btn" id="tier-dealer" onclick="setTier('dealer')">Крупный Опт<br><small>Дилер -11%</small></button>
+        </div>
+      </div>
+
+      <div class="control-block">
+        <label>Дополнительная проектная скидка менеджера:</label>
+        <div class="slider-row">
+          <input type="range" id="discountSlider" min="0" max="15" step="0.5" value="2.0" oninput="onDiscountChange(this.value)" />
+          <span class="discount-badge" id="discountLabel">2.0%</span>
+        </div>
+      </div>
+
+      <button class="btn-primary-full" onclick="runParser()">⚡ Распознать ТЗ и пересчитать смету</button>
+
+      <!-- Margin Guard Indicator -->
+      <div id="marginGuardBox" class="margin-guard auto"></div>
+    </div>
+
+    <!-- Right Column: Results -->
+    <div class="right-col">
+      <!-- KPI Strip -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="k-label">Итого сумма КП (с НДС 20%)</div>
+          <div class="k-val" id="kpiTotal" style="color:#38bdf8;">0 ₽</div>
+          <div class="k-sub" id="kpiDiscountSub">Скидка: 0 ₽</div>
+        </div>
+        <div class="kpi-card">
+          <div class="k-label">Валовая маржа завода</div>
+          <div class="k-val" id="kpiMarginPct" style="color:#10b981;">0%</div>
+          <div class="k-sub" id="kpiMarginRub">Прибыль: 0 ₽</div>
+        </div>
+        <div class="kpi-card">
+          <div class="k-label">Логистика и тоннаж</div>
+          <div class="k-val" id="kpiTrucks">0 фур</div>
+          <div class="k-sub" id="kpiWeightVol">Масса: 0 т | Объём: 0 м³</div>
+        </div>
+        <div class="kpi-card">
+          <div class="k-label">Скорость подготовки КП</div>
+          <div class="k-val" style="color:#a78bfa;">1.2 сек</div>
+          <div class="k-sub" id="kpiDirectionBadge">Вместо 2–4 дней в ПТО</div>
+        </div>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <div class="tabs-bar" style="margin-top:0; margin-bottom:14px;">
+        <button class="tab-btn active" id="tabBtn-spec" onclick="switchTab('spec')">📋 Инженерная расшифровка спецификации</button>
+        <button class="tab-btn" id="tabBtn-print" onclick="switchTab('print')">📄 Печатная форма КП (Бланк А4)</button>
+        <button class="tab-btn" id="tabBtn-crm" onclick="switchTab('crm')">🔗 JSON-пакет для amoCRM v4</button>
+      </div>
+
+      <!-- TAB 1: Interactive Specification Table -->
+      <div id="tabView-spec" class="panel">
+        <div class="panel-title">
+          <span id="directionTitleHeader">Спецификация и нормализация номенклатуры 1С</span>
+          <span style="font-size:12px;color:var(--emerald);">● Справочник ТУ/ГОСТ подключён</span>
+        </div>
+
+        <div class="table-wrap">
+          <table class="spec-table">
+            <thead>
+              <tr>
+                <th>№</th>
+                <th>Номенклатура завода (Код 1С) и строка из ТЗ</th>
+                <th>Статус подбора</th>
+                <th>Кол-во (Нормализация)</th>
+                <th>Цена с НДС</th>
+                <th>Сумма с НДС</th>
+              </tr>
+            </thead>
+            <tbody id="specTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Cross-sell Block -->
+        <div id="crossSellContainer" class="cross-sell-box">
+          <div class="cross-sell-header">
+            <h3>🔥 Умная допродажа (AI Cross-Sell): Забытые клиентом комплектующие по СП/ГОСТ</h3>
+            <button class="btn-add-cs" onclick="addAllCrossSell()">+ Включить все в КП</button>
+          </div>
+          <div id="crossSellList" class="cs-list"></div>
+        </div>
+
+        <!-- Logistics Summary Bar -->
+        <div class="logistics-bar">
+          <div>
+            <strong id="logisticsTitle" style="display:block;font-size:14px;">Расчёт транспорта (Еврофуры 20 т / 82 м³)</strong>
+            <span id="logisticsNote" style="font-size:12.5px;color:var(--muted);"></span>
+          </div>
+          <div class="truck-icons" id="truckIcons">🚚</div>
+        </div>
+      </div>
+
+      <!-- TAB 2: Printable Commercial Proposal -->
+      <div id="tabView-print" style="display:none;">
+        <div class="no-print" style="margin-bottom:12px;display:flex;justify-content:flex-end;gap:10px;">
+          <button class="btn-outline" onclick="window.print()">🖨 Распечатать / Сохранить в PDF</button>
+        </div>
+        <div class="a4-preview" id="a4PreviewContainer"></div>
+      </div>
+
+      <!-- TAB 3: amoCRM Payload -->
+      <div id="tabView-crm" class="panel" style="display:none;">
+        <div class="panel-title">
+          <span>Автоматическая передача расчёта в сделку amoCRM (REST API v4)</span>
+          <span class="badge-pill">POST /api/v4/leads/complex</span>
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin-top:0;">
+          После расчёта спецификации сервис автоматически обновляет бюджет сделки в amoCRM, прикрепляет товарные позиции и, если маржа ниже норматива, ставит задачу на согласование РОПу.
+        </p>
+        <pre class="json-box" id="crmJsonBox"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Заводской каталог (синхронизирован с Python-ядром spec_parser/catalog.py)
+  const CATALOG = {
+    "LSTK-PS-200-20": {
+      sku: "LSTK-PS-200-20",
+      name: "Профиль С-образный силовой ПС 200×50×2.0 (Сталь S350GD, Zn 275 г/м²)",
+      direction: "hangars",
+      unit: "м.п.",
+      weight: 4.95,
+      volume: 0.012,
+      pallet: null,
+      cost: 540,
+      price: 760,
+      keywords: ["пс 200", "пс-200", "с-образн", "с200", "профиль 200х50", "200*50*2"]
+    },
+    "LSTK-PZ-250-25": {
+      sku: "LSTK-PZ-250-25",
+      name: "Профиль Z-образный прогонный ПЗ 250×65×2.5 (Сталь S350GD, Zn 275 г/м²)",
+      direction: "hangars",
+      unit: "м.п.",
+      weight: 7.42,
+      volume: 0.018,
+      pallet: null,
+      cost: 810,
+      price: 1140,
+      keywords: ["пз 250", "пз-250", "z-образн", "прогон", "250х65", "швеллер гнут"],
+      analogNote: "Замена горячекатаного швеллера №24 на оцинкованный Z-прогон ЛСТК (снижение металлоёмкости на 32%)"
+    },
+    "LSTK-PSH-60-15": {
+      sku: "LSTK-PSH-60-15",
+      name: "Профиль шляпный обрешёточный ПШ 60×25×1.5 оцинкованный",
+      direction: "hangars",
+      unit: "м.п.",
+      weight: 1.48,
+      volume: 0.004,
+      pallet: null,
+      cost: 165,
+      price: 240,
+      keywords: ["пш 60", "пш-60", "обрешетк", "шляпный 60"]
+    },
+    "SP-WALL-120": {
+      sku: "SP-WALL-120",
+      name: "Сэндвич-панель стеновая ПСБ-120 мм (Минвата 110 кг/м³, сталь 0.5/0.5 RAL)",
+      direction: "hangars",
+      unit: "м²",
+      weight: 22.4,
+      volume: 0.135,
+      pallet: null,
+      cost: 2350,
+      price: 3180,
+      keywords: ["сэндвич стенов", "псб 120", "псб-120", "панель 120мм", "стеновая 120"]
+    },
+    "SP-ROOF-150": {
+      sku: "SP-ROOF-150",
+      name: "Сэндвич-панель кровельная ПСК-150 мм (Минвата, замок Roof-Lock, сталь 0.5/0.5)",
+      direction: "hangars",
+      unit: "м²",
+      weight: 26.8,
+      volume: 0.17,
+      pallet: null,
+      cost: 2690,
+      price: 3620,
+      keywords: ["сэндвич кровельн", "пск 150", "пск-150", "кровельная 150", "панель 150"]
+    },
+    "MET-BOLT-M16": {
+      sku: "MET-BOLT-M16",
+      name: "Комплект высокопрочного крепежа ЛСТК М16×60 (кл. пр. 8.8, горячий цинк, уп. 100 шт)",
+      direction: "hangars",
+      unit: "упак.",
+      weight: 14.5,
+      volume: 0.015,
+      pallet: null,
+      cost: 4200,
+      price: 6100,
+      keywords: ["болт м16", "крепеж каркас", "метизы м16", "высокопрочн"]
+    },
+    "FAS-KF1-12": {
+      sku: "FAS-KF1-12",
+      name: "Кассета фасадная металлическая КФ-1 (скрытый крепёж, t=1.2 мм, ПЭ RAL 7024/9006)",
+      direction: "facades",
+      unit: "м²",
+      weight: 13.2,
+      volume: 0.045,
+      pallet: null,
+      cost: 1820,
+      price: 2590,
+      keywords: ["кф-1", "кф1", "кассета закрыт", "скрытый крепеж", "кассета 1.2", "фасадная кассета"],
+      analogNote: "Замена композитных АКП-панелей на стальную кассету КФ-1 t=1.2мм (класс пожарной опасности НГ — негорючий)"
+    },
+    "FAS-KF2-10": {
+      sku: "FAS-KF2-10",
+      name: "Кассета фасадная металлическая КФ-2 (открытый крепёж, t=1.0 мм, ПЭ RAL)",
+      direction: "facades",
+      unit: "м²",
+      weight: 10.8,
+      volume: 0.04,
+      pallet: null,
+      cost: 1490,
+      price: 2120,
+      keywords: ["кф-2", "кф2", "кассета открыт", "открытый крепеж", "кассета 1.0"]
+    },
+    "FAS-KR-150": {
+      sku: "FAS-KR-150",
+      name: "Кронштейн фасадный несущий КР-150×2.0 оцинкованный с терморазрывом",
+      direction: "facades",
+      unit: "шт.",
+      weight: 0.42,
+      volume: 0.001,
+      pallet: null,
+      cost: 68,
+      price: 105,
+      keywords: ["кронштейн", "кр-150", "кр 150", "консоль фасад"]
+    },
+    "FAS-PSH-50": {
+      sku: "FAS-PSH-50",
+      name: "Профиль направляющий фасадный ПШ-50×20×1.2 оцинкованный",
+      direction: "facades",
+      unit: "м.п.",
+      weight: 1.18,
+      volume: 0.003,
+      pallet: null,
+      cost: 142,
+      price: 215,
+      keywords: ["пш-50", "пш 50", "направляющ фасад", "подсистема профиль"]
+    },
+    "FAS-PARAPET-07": {
+      sku: "FAS-PARAPET-07",
+      name: "Планка парапетная / откос оконный оцинк. с полимерным покрытием t=0.7 мм",
+      direction: "facades",
+      unit: "м.п.",
+      weight: 2.3,
+      volume: 0.008,
+      pallet: null,
+      cost: 340,
+      price: 510,
+      keywords: ["парапет", "откос", "отлив", "доборн", "нащельник"]
+    },
+    "FAS-SCREW-EPDM": {
+      sku: "FAS-SCREW-EPDM",
+      name: "Саморез фасадный 5.5×25 оцинк. с буром и шайбой EPDM (упак. 250 шт)",
+      direction: "facades",
+      unit: "упак.",
+      weight: 1.8,
+      volume: 0.003,
+      pallet: null,
+      cost: 780,
+      price: 1250,
+      keywords: ["саморез", "epdm", "крепеж фасад"]
+    },
+    "GB-D500-400": {
+      sku: "GB-D500-400",
+      name: "Блок газобетонный автоклавный D500 B3.5 F100 (625×400×250 мм, паз-гребень)",
+      direction: "gasblock",
+      unit: "м³",
+      weight: 590,
+      volume: 1.0,
+      pallet: 1.875,
+      cost: 5100,
+      price: 6800,
+      keywords: ["d500", "д500", "625х400", "625*400", "400мм", "стеновой 400", "блок 400"]
+    },
+    "GB-D400-375": {
+      sku: "GB-D400-375",
+      name: "Блок газобетонный теплоизоляционно-конструкционный D400 B2.5 (625×375×250 мм)",
+      direction: "gasblock",
+      unit: "м³",
+      weight: 480,
+      volume: 1.0,
+      pallet: 1.875,
+      cost: 5250,
+      price: 6950,
+      keywords: ["d400", "д400", "375мм", "625х375", "625*375", "блок 375", "теплый блок"],
+      analogNote: "Заводской автоклавный газоблок D400 B2.5 по ГОСТ 31360-2007 взамен неавтоклавного пеноблока/твинблока"
+    },
+    "GB-D500-150": {
+      sku: "GB-D500-150",
+      name: "Блок газобетонный перегородочный D500 B3.5 (625×150×250 мм)",
+      direction: "gasblock",
+      unit: "м³",
+      weight: 590,
+      volume: 1.0,
+      pallet: 1.875,
+      cost: 5150,
+      price: 6850,
+      keywords: ["перегородочн", "150мм", "625х150", "625*150", "блок 150", "толщина 150"]
+    },
+    "GB-UBLOCK-400": {
+      sku: "GB-UBLOCK-400",
+      name: "U-блок газобетонный лотковый под армопояс (500×400×250 мм)",
+      direction: "gasblock",
+      unit: "шт.",
+      weight: 24,
+      volume: 0.05,
+      pallet: null,
+      cost: 490,
+      price: 720,
+      keywords: ["u-блок", "у-блок", "лотков", "армопояс"]
+    },
+    "GB-LINTEL-2000": {
+      sku: "GB-LINTEL-2000",
+      name: "Перемычка газобетонная армированная несущая ПГБ 2000×400×250",
+      direction: "gasblock",
+      unit: "шт.",
+      weight: 135,
+      volume: 0.20,
+      pallet: null,
+      cost: 3600,
+      price: 5100,
+      keywords: ["перемычк", "пгб", "брусков", "оконн перемыч"]
+    },
+    "GB-GLUE-25": {
+      sku: "GB-GLUE-25",
+      name: "Клей для автоклавного газобетона тонкошовный (мешок 25 кг, всесезонный)",
+      direction: "gasblock",
+      unit: "меш.",
+      weight: 25,
+      volume: 0.02,
+      pallet: null,
+      cost: 245,
+      price: 380,
+      keywords: ["клей", "смесь кладочн", "25 кг", "мешок клея"]
+    },
+    "GB-MESH-50": {
+      sku: "GB-MESH-50",
+      name: "Сетка базальтовая кладочная для армирования газобетона (рулон 50 м²)",
+      direction: "gasblock",
+      unit: "рул.",
+      weight: 6.5,
+      volume: 0.03,
+      pallet: null,
+      cost: 1850,
+      price: 2790,
+      keywords: ["сетка базальт", "армирован кладк", "сетка кладочн"]
+    }
+  };
+
+  const PRESETS = {
+    hangars: `# Выписка из раздела КМ: Строительство тёплого склада 24×60×8 м (Демо-объект)
+1. Профиль гнутый С-образный ПС 200х50х2.0 оцинк — 5.4 тн
+2. Швеллер горячекатаный №24 (прогоны покрытия под замену на ЛСТК) — 480 п.м.
+3. Профиль шляпный обрешёточный ПШ 60х25х1.5 — 620 п.м.
+4. Сэндвич-панель стеновая ПСБ 120мм минвата RAL 7024 — 940 м2
+5. Сэндвич-панель кровельная ПСК 150мм минвата — 1480 м2`,
+
+    facades: `# Ведомость объёмов работ (ВОР): Реконструкция фасада административного корпуса
+1. Кассета фасадная закрытого типа КФ-1 т. 1.2мм RAL 7024 — 780 м2
+2. Панель композитная АКП Алюкобонд (требуется негорючий аналог НГ) — 420 м2
+3. Кассета фасадная открытого типа КФ-2 т. 1.0мм RAL 9006 — 310 м2
+4. Профиль направляющий фасадный ПШ-50 оцинк — 2950 п.м.
+5. Планка парапетная и откосы оконные оцинк RAL 7024 — 340 п.м.`,
+
+    gasblock: `# Заявка на поставку стеновых материалов: Коттеджный посёлок «Сосновый Бор» (1-я очередь)
+1. Блок газобетонный стеновой D500 625*400*250 паз-гребень — 165 м3
+2. Пеноблок / твинблок D300 375мм (подберите заводской автоклавный по ГОСТ) — 92 м3
+3. Блок перегородочный газобетон 625х150х250 D500 — 44 м3
+4. U-блок газобетонный лотковый под армопояс 400мм — 140 шт
+5. Перемычка газобетонная армированная ПГБ 2000 — 28 шт`,
+
+    mixed: `# Входящее письмо от отдела снабжения генподрядчика (Комплексная поставка на промбазу)
+Добрый день! Прошу срочно дать КП со скидкой под объект в Промзоне:
+- Профиль С-образный 200*50*2 оцинк — 3.2 тонны
+- Швеллер г/к 24 на прогоны — 260 п.м.
+- Кассета фасадная закрытого типа КФ-1 1.2 мм — 640 кв.м
+- Профиль подсистемы ПШ-50 — 1400 п.м.
+- Газоблок автоклавный Д500 625х400х250 (на пристрой АБК) — 78 куб.м
+- Перемычки армированные ПГБ 2000 — 14 шт`
+  };
+
+  const TIER_MULT = {
+    retail: 1.00,
+    builder_opt: 0.94,
+    dealer: 0.89
+  };
+
+  const DIRECTION_NAMES = {
+    hangars: "🏭 Проект «Ангары и быстровозводимые здания» (ЛСТК)",
+    facades: "🏢 Проект «Кровли и фасадные системы»",
+    gasblock: "🧱 Проект «Автоклавный газобетон»",
+    mixed: "📦 Комплексная поставка (Несколько проектов холдинга)"
+  };
+
+  let currentTier = "builder_opt";
+  let currentDiscount = 2.0;
+  let addedCrossSellSkus = new Set();
+  let lastProposal = null;
+
+  function loadPreset(key) {
+    document.querySelectorAll(".preset-btn").forEach(b => b.classList.remove("active"));
+    const btn = document.getElementById("preset-" + key);
+    if (btn) btn.classList.add("active");
+    document.getElementById("specInput").value = PRESETS[key];
+    addedCrossSellSkus.clear();
+    runParser();
+  }
+
+  function setTier(tier) {
+    currentTier = tier;
+    document.querySelectorAll(".tier-btn").forEach(b => b.classList.remove("active"));
+    document.getElementById("tier-" + tier).classList.add("active");
+    runParser();
+  }
+
+  function onDiscountChange(val) {
+    currentDiscount = parseFloat(val);
+    document.getElementById("discountLabel").textContent = currentDiscount.toFixed(1) + "%";
+    runParser();
+  }
+
+  function switchTab(tab) {
+    ["spec", "print", "crm"].forEach(t => {
+      document.getElementById("tabBtn-" + t).classList.toggle("active", t === tab);
+      document.getElementById("tabView-" + t).style.display = (t === tab) ? "block" : "none";
+    });
+  }
+
+  function matchLine(text) {
+    const low = text.toLowerCase();
+    if (low.includes("швеллер") || low.includes("горячекатан") || low.includes("г/к 24")) {
+      return { prod: CATALOG["LSTK-PZ-250-25"], matchType: "analog", conf: 92 };
+    }
+    if (low.includes("d300") || low.includes("д300") || low.includes("пеноблок") || low.includes("твинблок")) {
+      return { prod: CATALOG["GB-D400-375"], matchType: "analog", conf: 90 };
+    }
+    if (low.includes("алюкобонд") || low.includes("акп") || low.includes("композитн")) {
+      return { prod: CATALOG["FAS-KF1-12"], matchType: "analog", conf: 89 };
+    }
+
+    let best = null;
+    let bestScore = 0;
+    for (const sku in CATALOG) {
+      const p = CATALOG[sku];
+      let score = 0;
+      for (const kw of p.keywords) {
+        if (low.includes(kw)) score += kw.length;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        best = p;
+      }
+    }
+    if (best && bestScore > 0) {
+      return { prod: best, matchType: "exact", conf: Math.min(99, 85 + bestScore) };
+    }
+    return null;
+  }
+
+  function extractQtyUnit(text, defaultUnit) {
+    const low = text.toLowerCase();
+    const re = /(\d+(?:[.,]\d+)?)\s*(тн|тонн|тонны|т\.|п\.м\.|пог\.\s*м|м\.п\.|м2|кв\.?\s*м|м²|м3|куб\.?\s*м|м³|шт|упак|меш|рул)/g;
+    let m, lastMatch = null;
+    while ((m = re.exec(low)) !== null) {
+      lastMatch = m;
+    }
+    if (lastMatch) {
+      const val = parseFloat(lastMatch[1].replace(",", "."));
+      const u = lastMatch[2];
+      if (u.includes("тн") || u.includes("тонн") || u === "т.") return { qty: val, unit: "т" };
+      if (u.includes("п.м") || u.includes("пог") || u.includes("м.п")) return { qty: val, unit: "м.п." };
+      if (u.includes("м2") || u.includes("кв") || u.includes("м²")) return { qty: val, unit: "м²" };
+      if (u.includes("м3") || u.includes("куб") || u.includes("м³")) return { qty: val, unit: "м³" };
+      return { qty: val, unit: defaultUnit };
+    }
+    const nums = low.match(/(\d+(?:[.,]\d+)?)/g);
+    if (nums && nums.length > 0) {
+      return { qty: parseFloat(nums[nums.length - 1].replace(",", ".")), unit: defaultUnit };
+    }
+    return { qty: 1, unit: defaultUnit };
+  }
+
+  function addCrossSellSku(sku) {
+    addedCrossSellSkus.add(sku);
+    runParser();
+  }
+
+  function addAllCrossSell() {
+    if (!lastProposal) return;
+    lastProposal.recommendations.forEach(r => addedCrossSellSkus.add(r.sku));
+    runParser();
+  }
+
+  function fmtMoney(n) {
+    return n.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ₽";
+  }
+
+  function runParser() {
+    const raw = document.getElementById("specInput").value || "";
+    const rawLines = raw.split(/\r?\n/).map(s => s.trim()).filter(s => s && !s.startsWith("#"));
+
+    const tierMult = TIER_MULT[currentTier] || 1.0;
+    const discMult = Math.max(0, 1.0 - currentDiscount / 100.0);
+
+    const lines = [];
+    let idx = 1;
+
+    for (const rawLine of rawLines) {
+      const m = matchLine(rawLine);
+      if (!m) continue;
+      const prod = m.prod;
+      const qu = extractQtyUnit(rawLine, prod.unit);
+
+      let normQty = qu.qty;
+      let pallets = null;
+      let notes = [];
+
+      if (m.matchType === "analog" && prod.analogNote) {
+        notes.push(prod.analogNote);
+      }
+
+      if (qu.unit === "т" && prod.unit === "м.п.") {
+        normQty = Math.ceil((qu.qty * 1000) / prod.weight);
+        notes.push(`Пересчёт из тоннажа (${qu.qty} т × 1000 / ${prod.weight} кг/м) → ${normQty} м.п.`);
+      } else if (prod.pallet && prod.unit === "м³") {
+        pallets = Math.ceil(qu.qty / prod.pallet);
+        normQty = +(pallets * prod.pallet).toFixed(3);
+        notes.push(`Кратность поддонам: ${pallets} подд. × ${prod.pallet} м³ = ${normQty} м³`);
+      }
+
+      const unitPrice = +(prod.price * tierMult * discMult).toFixed(2);
+      const total = +(normQty * unitPrice).toFixed(2);
+
+      lines.push({
+        lineNo: idx++,
+        rawText: rawLine,
+        sku: prod.sku,
+        name: prod.name,
+        direction: prod.direction,
+        matchType: m.matchType,
+        conf: m.conf,
+        reqQty: qu.qty,
+        reqUnit: qu.unit,
+        normQty: normQty,
+        unit: prod.unit,
+        pallets: pallets,
+        note: notes.join(" | "),
+        unitPrice: unitPrice,
+        unitCost: prod.cost,
+        total: total,
+        weightKg: +(normQty * prod.weight).toFixed(1),
+        volM3: +(normQty * prod.volume).toFixed(2)
+      });
+    }
+
+    // Генерация рекомендаций допродажи (Cross-Sell)
+    const presentSkus = new Set(lines.map(l => l.sku));
+    const allRecs = [];
+
+    const gbM3 = lines.filter(l => ["GB-D500-400", "GB-D400-375", "GB-D500-150"].includes(l.sku))
+                      .reduce((s, l) => s + l.normQty, 0);
+    if (gbM3 > 0) {
+      const bags = Math.ceil(gbM3 * 1.1);
+      const pGlue = CATALOG["GB-GLUE-25"];
+      const upGlue = +(pGlue.price * tierMult * discMult).toFixed(2);
+      allRecs.push({
+        sku: pGlue.sku,
+        name: pGlue.name,
+        qty: bags,
+        unit: pGlue.unit,
+        unitPrice: upGlue,
+        total: +(bags * upGlue).toFixed(2),
+        reason: `Норматив расхода: 1.1 мешка на 1 м³ кладки (на объём ${gbM3.toFixed(2)} м³)`
+      });
+
+      const rolls = Math.max(1, Math.ceil(gbM3 / 30));
+      const pMesh = CATALOG["GB-MESH-50"];
+      const upMesh = +(pMesh.price * tierMult * discMult).toFixed(2);
+      allRecs.push({
+        sku: pMesh.sku,
+        name: pMesh.name,
+        qty: rolls,
+        unit: pMesh.unit,
+        unitPrice: upMesh,
+        total: +(rolls * upMesh).toFixed(2),
+        reason: "По СП 15.13330: армирование каждого 3-го ряда кладки и зон перемычек"
+      });
+    }
+
+    const fasM2 = lines.filter(l => ["FAS-KF1-12", "FAS-KF2-10"].includes(l.sku))
+                       .reduce((s, l) => s + l.normQty, 0);
+    if (fasM2 > 0) {
+      const krs = Math.ceil(fasM2 * 2.2);
+      const pKr = CATALOG["FAS-KR-150"];
+      const upKr = +(pKr.price * tierMult * discMult).toFixed(2);
+      allRecs.push({
+        sku: pKr.sku,
+        name: pKr.name,
+        qty: krs,
+        unit: pKr.unit,
+        unitPrice: upKr,
+        total: +(krs * upKr).toFixed(2),
+        reason: `Комплектация подсистемы: 2.2 несущих кронштейна на 1 м² кассет (${fasM2} м²)`
+      });
+
+      const scPacks = Math.max(1, Math.ceil((fasM2 * 9) / 250));
+      const pSc = CATALOG["FAS-SCREW-EPDM"];
+      const upSc = +(pSc.price * tierMult * discMult).toFixed(2);
+      allRecs.push({
+        sku: pSc.sku,
+        name: pSc.name,
+        qty: scPacks,
+        unit: pSc.unit,
+        unitPrice: upSc,
+        total: +(scPacks * upSc).toFixed(2),
+        reason: "Крепёж фасадных кассет: 9 саморезов EPDM на 1 м²"
+      });
+    }
+
+    const lstkM = lines.filter(l => ["LSTK-PS-200-20", "LSTK-PZ-250-25"].includes(l.sku))
+                       .reduce((s, l) => s + l.normQty, 0);
+    if (lstkM > 0) {
+      const boltPacks = Math.max(1, Math.ceil(lstkM / 180));
+      const pBolt = CATALOG["MET-BOLT-M16"];
+      const upBolt = +(pBolt.price * tierMult * discMult).toFixed(2);
+      allRecs.push({
+        sku: pBolt.sku,
+        name: pBolt.name,
+        qty: boltPacks,
+        unit: pBolt.unit,
+        unitPrice: upBolt,
+        total: +(boltPacks * upBolt).toFixed(2),
+        reason: "Узловые соединения силового каркаса ЛСТК по серии КМ (болты М16 кл. 8.8)"
+      });
+    }
+
+    const activeRecs = [];
+    for (const r of allRecs) {
+      if (addedCrossSellSkus.has(r.sku) && !presentSkus.has(r.sku)) {
+        const prod = CATALOG[r.sku];
+        lines.push({
+          lineNo: idx++,
+          rawText: `[Добавлено из AI Cross-Sell] ${r.name}`,
+          sku: prod.sku,
+          name: prod.name,
+          direction: prod.direction,
+          matchType: "exact",
+          conf: 100,
+          reqQty: r.qty,
+          reqUnit: prod.unit,
+          normQty: r.qty,
+          unit: prod.unit,
+          pallets: null,
+          note: r.reason,
+          unitPrice: r.unitPrice,
+          unitCost: prod.cost,
+          total: r.total,
+          weightKg: +(r.qty * prod.weight).toFixed(1),
+          volM3: +(r.qty * prod.volume).toFixed(2)
+        });
+      } else if (!presentSkus.has(r.sku)) {
+        activeRecs.push(r);
+      }
+    }
+
+    // Итоги, логистика и маржа
+    const dirs = new Set(lines.map(l => l.direction));
+    const primaryDir = dirs.size === 1 ? [...dirs][0] : (dirs.size > 1 ? "mixed" : "hangars");
+
+    const subtotalNoDisc = lines.reduce((s, l) => {
+      const p = CATALOG[l.sku];
+      return s + l.normQty * (+(p.price * tierMult).toFixed(2));
+    }, 0);
+    const finalTotal = lines.reduce((s, l) => s + l.total, 0);
+    const discRub = Math.max(0, subtotalNoDisc - finalTotal);
+    const totalCost = lines.reduce((s, l) => s + l.normQty * l.unitCost, 0);
+    const marginRub = finalTotal - totalCost;
+    const marginPct = finalTotal > 0 ? +((marginRub / finalTotal) * 100).toFixed(1) : 0;
+
+    const totalKg = lines.reduce((s, l) => s + l.weightKg, 0);
+    const totalTons = +(totalKg / 1000).toFixed(2);
+    const totalM3 = +lines.reduce((s, l) => s + l.volM3, 0).toFixed(1);
+    const totalPallets = lines.reduce((s, l) => s + (l.pallets || 0), 0);
+
+    const trFactor = Math.max(totalKg / 20000, totalM3 / 82, totalPallets > 0 ? totalPallets / 21 : 0);
+    const trucks = totalKg > 0 ? Math.max(1, Math.ceil(trFactor)) : 0;
+    const lastLoadPct = trucks > 0 ? Math.min(100, Math.round((trFactor - (trucks - 1)) * 100)) : 0;
+
+    lastProposal = {
+      number: "КП-2026/11-0842",
+      primaryDir,
+      dirTitle: DIRECTION_NAMES[primaryDir],
+      lines,
+      recommendations: activeRecs,
+      finalTotal,
+      discRub,
+      marginRub,
+      marginPct,
+      totalTons,
+      totalM3,
+      totalPallets,
+      trucks,
+      lastLoadPct
+    };
+
+    renderUI(lastProposal);
+  }
+
+  function renderUI(prop) {
+    document.getElementById("kpiTotal").textContent = fmtMoney(prop.finalTotal);
+    document.getElementById("kpiDiscountSub").textContent = `Проектная скидка (${currentDiscount}%): -${fmtMoney(prop.discRub)}`;
+    document.getElementById("kpiMarginPct").textContent = prop.marginPct + "%";
+    document.getElementById("kpiMarginRub").textContent = "Маржа: " + fmtMoney(prop.marginRub);
+    document.getElementById("kpiTrucks").textContent = prop.trucks + " еврофур (20т)";
+    document.getElementById("kpiWeightVol").textContent =
+      `Вес: ${prop.totalTons} т | Объём: ${prop.totalM3} м³` + (prop.totalPallets ? ` | Поддонов: ${prop.totalPallets}` : "");
+    document.getElementById("directionTitleHeader").textContent = prop.dirTitle;
+
+    // Светофор маржи
+    const mg = document.getElementById("marginGuardBox");
+    mg.className = "margin-guard ";
+    if (prop.marginPct >= 21.0) {
+      mg.classList.add("auto");
+      mg.innerHTML = `<strong>🟢 Авто-согласование (Маржа ${prop.marginPct}% ≥ 21%):</strong> КП в рамках полномочий менеджера. Отправка клиенту без задержек.`;
+    } else if (prop.marginPct >= 14.5) {
+      mg.classList.add("rop");
+      mg.innerHTML = `<strong>🟡 Требуется акцепт РОПа (Маржа ${prop.marginPct}% < 21%):</strong> При выгрузке в amoCRM будет автоматически создана задача на согласование Руководителю направления.`;
+    } else {
+      mg.classList.add("director");
+      mg.innerHTML = `<strong>🔴 Блокировка минимальной маржи (${prop.marginPct}% < 14.5%):</strong> Скидка превышает допустимый порог. Требуется виза Коммерческого директора.`;
+    }
+
+    // Таблица позиций
+    const tbody = document.getElementById("specTableBody");
+    tbody.innerHTML = prop.lines.map(l => `
+      <tr>
+        <td><strong>${l.lineNo}</strong></td>
+        <td>
+          <strong>${l.name}</strong> <span style="color:var(--muted);font-size:11.5px;">[${l.sku}]</span>
+          <div class="raw-quote">Исходник ТЗ: «${l.rawText}»</div>
+          ${l.note ? `<div class="eng-note">💡 ${l.note}</div>` : ""}
+        </td>
+        <td>
+          <span class="match-badge ${l.matchType === 'analog' ? 'match-analog' : 'match-exact'}">
+            ${l.matchType === 'analog' ? '🔄 Заводской аналог' : '✅ Точно по ТУ'}
+          </span>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Точность AI: ${l.conf}%</div>
+        </td>
+        <td>
+          <strong>${l.normQty} ${l.unit}</strong>
+          ${l.pallets ? `<div style="font-size:11.5px;color:#38bdf8;">(${l.pallets} подд.)</div>` : ""}
+          <div style="font-size:11px;color:var(--muted);">${(l.weightKg/1000).toFixed(2)} т</div>
+        </td>
+        <td>${fmtMoney(l.unitPrice)}</td>
+        <td><strong>${fmtMoney(l.total)}</strong></td>
+      </tr>
+    `).join("");
+
+    // Допродажа Cross-sell
+    const csBox = document.getElementById("crossSellContainer");
+    const csList = document.getElementById("crossSellList");
+    if (prop.recommendations.length === 0) {
+      csBox.style.display = "none";
+    } else {
+      csBox.style.display = "block";
+      csList.innerHTML = prop.recommendations.map(r => `
+        <div class="cs-item">
+          <div class="cs-info">
+            <strong>+ ${r.name} — ${r.qty} ${r.unit} (${fmtMoney(r.total)})</strong>
+            <span>📐 Инженерный расчёт: ${r.reason}</span>
+          </div>
+          <button class="btn-add-cs" onclick="addCrossSellSku('${r.sku}')">+ Включить в КП</button>
+        </div>
+      `).join("");
+    }
+
+    // Логистика
+    document.getElementById("logisticsTitle").textContent =
+      `Логистический расчёт: Еврофур (20 т) — ${prop.trucks} маш. | Общая масса: ${prop.totalTons} т | Объём: ${prop.totalM3} м³`;
+    document.getElementById("logisticsNote").textContent =
+      prop.lastLoadPct < 65 && prop.trucks > 1
+        ? `Последняя машина загружена на ${prop.lastLoadPct}%. Рекомендуется доукомплектовать заказ сопутствующими материалами (клей, крепёж, доборные элементы) для оптимизации стоимости доставки.`
+        : `Загрузка транспорта оптимальна (заполнение завершающего рейса: ${prop.lastLoadPct}%).`;
+    document.getElementById("truckIcons").textContent = "🚚".repeat(Math.min(8, prop.trucks));
+
+    // Печатная форма А4
+    renderA4Preview(prop);
+
+    // JSON amoCRM
+    const crmPayload = {
+      lead_name: `Расчёт ТЗ ${prop.number} (${prop.dirTitle})`,
+      price: Math.round(prop.finalTotal),
+      pipeline_direction: prop.primaryDir,
+      approval_required: prop.marginPct < 21.0,
+      custom_fields: {
+        proposal_no: prop.number,
+        gross_margin_pct: prop.marginPct + "%",
+        logistics_trucks_20t: prop.trucks,
+        total_weight_tons: prop.totalTons
+      },
+      catalog_elements: prop.lines.map(l => ({
+        sku: l.sku,
+        name: l.name,
+        qty: l.normQty,
+        unit: l.unit,
+        price_rub: l.unitPrice,
+        total_rub: l.total
+      }))
+    };
+    document.getElementById("crmJsonBox").textContent = JSON.stringify(crmPayload, null, 2);
+  }
+
+  function renderA4Preview(prop) {
+    const today = new Date().toLocaleDateString("ru-RU");
+    document.getElementById("a4PreviewContainer").innerHTML = `
+      <div class="a4-header">
+        <div>
+          <strong style="font-size:16px;">ПРОМЫШЛЕННЫЙ ХОЛДИНГ (ДЕМО-СТЕНД АВТОМАТИЗАЦИИ)</strong><br>
+          <span style="color:#475569;">Направление: ${prop.dirTitle}</span><br>
+          <span style="color:#64748b;font-size:11.5px;">г. Челябинск · Отдел корпоративных B2B-продаж · rykunov@gmail.com</span>
+        </div>
+        <div style="text-align:right;">
+          <strong style="font-size:15px;">КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ № ${prop.number}</strong><br>
+          <span>от ${today} г.</span><br>
+          <span style="font-size:11px;color:#dc2626;">* Демонстрационные расчётные данные</span>
+        </div>
+      </div>
+
+      <p style="margin:8px 0;">
+        В ответ на Ваш технический запрос направляем спецификацию и расчёт стоимости поставки продукции заводского изготовления:
+      </p>
+
+      <table class="a4-table">
+        <thead>
+          <tr>
+            <th>№</th>
+            <th>Артикул</th>
+            <th>Наименование продукции по ГОСТ / ТУ завода</th>
+            <th>Кол-во</th>
+            <th>Ед.</th>
+            <th>Цена с НДС</th>
+            <th>Сумма с НДС</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${prop.lines.map(l => `
+            <tr>
+              <td>${l.lineNo}</td>
+              <td>${l.sku}</td>
+              <td>
+                <strong>${l.name}</strong>
+                ${l.note ? `<br><span style="font-size:11px;color:#475569;">Примечание: ${l.note}</span>` : ""}
+              </td>
+              <td>${l.normQty}</td>
+              <td>${l.unit}</td>
+              <td>${fmtMoney(l.unitPrice)}</td>
+              <td><strong>${fmtMoney(l.total)}</strong></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:16px;gap:20px;flex-wrap:wrap;">
+        <div style="font-size:12px;color:#334155;max-width:60%;">
+          <strong>Логистическая справка и условия поставки:</strong><br>
+          • Суммарная масса партии: <strong>${prop.totalTons} т</strong> | Расчётный объём: <strong>${prop.totalM3} м³</strong>${prop.totalPallets ? ` | Поддонов: <strong>${prop.totalPallets} шт.</strong>` : ""}<br>
+          • Количество рейсов еврофур (20 т): <strong>${prop.trucks} маш.</strong><br>
+          • Срок готовности к отгрузке: 7–14 рабочих дней с момента поступления аванса.<br>
+          • Срок действия настоящего предложения: 5 банковских дней.
+        </div>
+        <div style="text-align:right;font-size:14px;">
+          <div>Скидка по проекту (${currentDiscount}%): <strong>-${fmtMoney(prop.discRub)}</strong></div>
+          <div style="font-size:18px;margin-top:6px;">ИТОГО К ОПЛАТЕ (в т.ч. НДС 20%): <strong>${fmtMoney(prop.finalTotal)}</strong></div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;padding-top:12px;border-top:1px solid #cbd5e1;display:flex;justify-content:space-between;font-size:12px;color:#475569;">
+        <div>Коммерческий руководитель направления: _____________________ / А. Н. Рыкунов /</div>
+        <div>Сформировано автоматически в системе B2B Spec Parser за 1.2 сек.</div>
+      </div>
+    `;
+  }
+
+  function download1CCsv() {
+    if (!lastProposal) return;
+    const rows = [
+      ["№", "Код 1С", "Наименование", "Кол-во", "Ед.изм.", "Цена с НДС", "Сумма с НДС", "Масса (кг)", "Инженерное примечание"]
+    ];
+    for (const l of lastProposal.lines) {
+      rows.push([
+        l.lineNo,
+        l.sku,
+        `"${l.name.replace(/"/g, '""')}"`,
+        l.normQty,
+        l.unit,
+        l.unitPrice.toFixed(2),
+        l.total.toFixed(2),
+        l.weightKg.toFixed(1),
+        `"${(l.note || 'Точное соответствие').replace(/"/g, '""')}"`
+      ]);
+    }
+    const csvContent = "\uFEFF" + rows.map(r => r.join(";")).join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Spec_1C_${lastProposal.number.replace(/\//g, "-")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Инициализация при загрузке
+  window.addEventListener("DOMContentLoaded", () => {
+    loadPreset("hangars");
+  });
+</script>
+</body>
+</html>
