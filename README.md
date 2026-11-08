@@ -7,7 +7,8 @@
 [![1C / amoCRM](https://img.shields.io/badge/Integration-1C%3AERP%20%7C%20amoCRM%20v4-orange.svg)](https://www.amocrm.ru)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**▶️ Интерактивный инженерно-коммерческий стенд:** https://kilevoy.github.io/b2b-spec-parser/
+**▶️ Интерактивный инженерно-коммерческий стенд:** https://kilevoy.github.io/b2b-spec-parser/  
+**📊 Бизнес-презентация проекта (8 слайдов):** https://kilevoy.github.io/b2b-spec-parser/presentation.html
 
 > [!NOTE]
 > **Дисклеймер:** Все цены, показатели себестоимости, артикулы 1С, расчёты маржинальности и наименования объектов в репозитории и веб-стенде являются смоделированными (демо-данными) для защиты коммерческой тайны и демонстрации работы алгоритмов.
@@ -125,3 +126,4 @@ b2b-spec-parser/
 * GitHub: [@kilevoy](https://github.com/kilevoy)
 * Telegram: [@rykunov](https://t.me/rykunov)
 * Email: rykunov@gmail.com
+

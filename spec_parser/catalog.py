@@ -232,3 +232,4 @@ FACTORY_CATALOG: List[CatalogProduct] = [
 
 
 CATALOG_BY_SKU: Dict[str, CatalogProduct] = {item.sku: item for item in FACTORY_CATALOG}
+

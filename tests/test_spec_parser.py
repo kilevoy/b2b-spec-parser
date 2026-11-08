@@ -79,3 +79,4 @@ def test_margin_guardrails_and_exports():
     crm_payload = build_amocrm_payload(res_normal)
     assert crm_payload["price"] > 0
     assert len(crm_payload["catalog_elements"]) == 1
+

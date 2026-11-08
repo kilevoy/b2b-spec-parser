@@ -71,3 +71,4 @@ def build_amocrm_payload(proposal: ProposalResult, client_name: str = "ООО «
             for line in proposal.lines
         ],
     }
+

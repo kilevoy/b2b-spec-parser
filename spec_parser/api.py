@@ -60,3 +60,4 @@ async def export_amocrm(req: ParseRequest):
         include_cross_sell_skus=req.include_cross_sell_skus,
     )
     return build_amocrm_payload(result)
+

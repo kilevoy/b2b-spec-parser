@@ -109,3 +109,4 @@ class ProposalResult(BaseModel):
     cross_sell_recommendations: List[CrossSellItem]
     logistics: LogisticsSummary
     margin: MarginSummary
+

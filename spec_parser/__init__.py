@@ -5,3 +5,4 @@ logistics calculator, and margin controller for industrial B2B sales.
 """
 
 __version__ = "1.0.0"
+
