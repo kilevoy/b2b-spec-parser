@@ -579,7 +579,7 @@
         <span class="badge-pill">B2B Spec Parser v1.0</span>
       </h1>
       <p class="subtitle">
-        Автоматическая расшифровка строительных спецификаций, ведомостей объёмов работ (ВОР) и заявок снабжения по 3 направлениям холдинга (<strong>Ангары/ЛСТК</strong>, <strong>Фасады</strong>, <strong>Газобетон</strong>). Пересчёт единиц (тн → м.п., м³ → поддоны), подбор заводских аналогов, авто-допродажа комплектующих и контроль маржи за <strong>1.5 секунды</strong> вместо 3 дней в ПТО.
+        Автоматическая расшифровка строительных спецификаций, ведомостей объёмов работ (ВОР) и заявок снабжения по 3 направлениям холдинга (<strong>Ангары/ЛСТК</strong>, <strong>Фасады</strong>, <strong>Газобетон</strong>). Пересчёт единиц (тн → м.п., м³ → поддоны), подбор заводских аналогов, авто-допродажа комплектующих и контроль маржи по каждой позиции.
       </p>
     </div>
     <div class="nav-links">
@@ -652,7 +652,7 @@
       <!-- KPI Strip -->
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="k-label">Итого сумма КП (с НДС 20%)</div>
+          <div class="k-label">Итого сумма КП (с НДС 22%)</div>
           <div class="k-val" id="kpiTotal" style="color:#38bdf8;">0 ₽</div>
           <div class="k-sub" id="kpiDiscountSub">Скидка: 0 ₽</div>
         </div>
@@ -667,9 +667,9 @@
           <div class="k-sub" id="kpiWeightVol">Масса: 0 т | Объём: 0 м³</div>
         </div>
         <div class="kpi-card">
-          <div class="k-label">Скорость подготовки КП</div>
-          <div class="k-val" style="color:#a78bfa;">1.2 сек</div>
-          <div class="k-sub" id="kpiDirectionBadge">Вместо 2–4 дней в ПТО</div>
+          <div class="k-label">Время расчёта в браузере</div>
+          <div class="k-val" id="kpiTime" style="color:#a78bfa;">—</div>
+          <div class="k-sub" id="kpiDirectionBadge">Только сам расчёт, без проверки ПТО</div>
         </div>
       </div>
 
@@ -733,11 +733,11 @@
       <!-- TAB 3: amoCRM Payload -->
       <div id="tabView-crm" class="panel" style="display:none;">
         <div class="panel-title">
-          <span>Автоматическая передача расчёта в сделку amoCRM (REST API v4)</span>
+          <span>Пакет для импорта расчёта в сделку amoCRM (REST API v4)</span>
           <span class="badge-pill">POST /api/v4/leads/complex</span>
         </div>
         <p style="font-size:13px;color:var(--muted);margin-top:0;">
-          После расчёта спецификации сервис автоматически обновляет бюджет сделки в amoCRM, прикрепляет товарные позиции и, если маржа ниже норматива, ставит задачу на согласование РОПу.
+          После расчёта сервис формирует JSON-пакет для обновления бюджета сделки и товарных позиций в amoCRM. Если маржа ниже норматива, расчёт требует согласования РОПа.
         </p>
         <pre class="json-box" id="crmJsonBox"></pre>
       </div>
@@ -1148,6 +1148,7 @@
   }
 
   function runParser() {
+    const __t0 = performance.now();
     const raw = document.getElementById("specInput").value || "";
     const rawLines = raw.split(/\r?\n/).map(s => s.trim()).filter(s => s && !s.startsWith("#"));
 
@@ -1356,6 +1357,7 @@
     };
 
     renderUI(lastProposal);
+    { const el = document.getElementById("kpiTime"); if (el) el.textContent = Math.max(1, Math.round(performance.now() - __t0)) + " мс"; }
   }
 
   function renderUI(prop) {
@@ -1376,7 +1378,7 @@
       mg.innerHTML = `<strong>🟢 Авто-согласование (Маржа ${prop.marginPct}% ≥ 21%):</strong> КП в рамках полномочий менеджера. Отправка клиенту без задержек.`;
     } else if (prop.marginPct >= 14.5) {
       mg.classList.add("rop");
-      mg.innerHTML = `<strong>🟡 Требуется акцепт РОПа (Маржа ${prop.marginPct}% < 21%):</strong> При выгрузке в amoCRM будет автоматически создана задача на согласование Руководителю направления.`;
+      mg.innerHTML = `<strong>🟡 Требуется акцепт РОПа (Маржа ${prop.marginPct}% < 21%):</strong> Перед выгрузкой в amoCRM рекомендуется создать задачу на согласование Руководителю направления.`;
     } else {
       mg.classList.add("director");
       mg.innerHTML = `<strong>🔴 Блокировка минимальной маржи (${prop.marginPct}% < 14.5%):</strong> Скидка превышает допустимый порог. Требуется виза Коммерческого директора.`;
@@ -1522,13 +1524,13 @@
         </div>
         <div style="text-align:right;font-size:14px;">
           <div>Скидка по проекту (${currentDiscount}%): <strong>-${fmtMoney(prop.discRub)}</strong></div>
-          <div style="font-size:18px;margin-top:6px;">ИТОГО К ОПЛАТЕ (в т.ч. НДС 20%): <strong>${fmtMoney(prop.finalTotal)}</strong></div>
+          <div style="font-size:18px;margin-top:6px;">ИТОГО К ОПЛАТЕ (в т.ч. НДС 22%): <strong>${fmtMoney(prop.finalTotal)}</strong></div>
         </div>
       </div>
 
       <div style="margin-top:24px;padding-top:12px;border-top:1px solid #cbd5e1;display:flex;justify-content:space-between;font-size:12px;color:#475569;">
         <div>Коммерческий руководитель направления: _____________________ / А. Н. Рыкунов /</div>
-        <div>Сформировано автоматически в системе B2B Spec Parser за 1.2 сек.</div>
+        <div>Сформировано в демо-версии B2B Spec Parser.</div>
       </div>
     `;
   }
